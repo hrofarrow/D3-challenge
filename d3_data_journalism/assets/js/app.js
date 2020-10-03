@@ -65,10 +65,9 @@ function makeResponsive() {
       .call(bottomAxis);
 
     // create the scatter plot
-    var circlesGroup = chartGroup
-      .selectAll("#scatter")
-      .data(healthData)
-      .enter()
+    var circlesGroup = chartGroup.selectAll("circle").data(healthData).enter();
+
+    circlesGroup
       .append("circle")
       .attr("cx", function (d) {
         return xLinearScale(d.age);
@@ -106,18 +105,13 @@ function makeResponsive() {
     // add texts to circles
     circlesGroup
       .append("text")
-      //We return the abbreviation to .text, which makes the text the abbreviation.
       .text(function (d) {
         return d.abbr;
       })
-      //Now place the text using our scale.
       .attr("dx", function (d) {
         return xLinearScale(d["age"]);
       })
       .attr("dy", function (d) {
-        // When the size of the text is the radius,
-        // adding a third of the radius to the height
-        // pushes it into the middle of the circle.
         return yLinearScale(d["smokes"]) + 10 / 2.5;
       })
       .attr("font-size", 15)
@@ -125,7 +119,7 @@ function makeResponsive() {
       .attr("class", "stateText");
 
     // append a div to the body to create tooltips and assign it to a class
-    // var toolTip = d3.select("body").append("div").attr("class", "tooltip");
+    var toolTip = d3.select("body").append("div").attr("class", "tooltip");
 
     // add an onmouseover event to display the tooltip
     circlesGroup
