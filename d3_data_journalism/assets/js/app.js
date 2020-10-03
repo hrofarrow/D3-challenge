@@ -1,34 +1,35 @@
-// define svg area dimensions
-var svgWidth = 960;
-var svgHeight = 500;
+// make the graph responsive for tooltips
+function makeResponsive() {
+  // define svg area dimensions
+  var svgWidth = 960;
+  var svgHeight = 500;
 
-// define the margins
-var chartMargin = {
-  top: 20,
-  bottom: 60,
-  left: 100,
-  right: 50,
-};
+  // define the margins
+  var chartMargin = {
+    top: 20,
+    bottom: 60,
+    left: 100,
+    right: 50,
+  };
 
-// define the dimensions of the chart area
-var chartWidth = svgWidth - chartMargin.left - chartMargin.right;
-var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
+  // define the dimensions of the chart area
+  var chartWidth = svgWidth - chartMargin.left - chartMargin.right;
+  var chartHeight = svgHeight - chartMargin.top - chartMargin.bottom;
 
-// select the body and append svg to it
-var svg = d3
-  .select("body")
-  .append("svg")
-  .attr("height", svgHeight)
-  .attr("width", svgWidth);
+  // select the body and append svg to it
+  var svg = d3
+    .select("body")
+    .append("svg")
+    .attr("height", svgHeight)
+    .attr("width", svgWidth);
 
-// append a group to the svg and shift (transform and translate)
-var chartGroup = svg
-  .append("g")
-  .attr("transform", `translate (${chartMargin.left}, ${chartMargin.top})`);
+  // append a group to the svg and shift (transform and translate)
+  var chartGroup = svg
+    .append("g")
+    .attr("transform", `translate (${chartMargin.left}, ${chartMargin.top})`);
 
-// load in the csv data
-d3.csv("./assets/data/data.csv")
-  .then(function (healthData) {
+  // load in the csv data
+  d3.csv("./assets/data/data.csv").then(function (healthData) {
     console.log(healthData);
 
     //cast the data into integers
@@ -64,7 +65,7 @@ d3.csv("./assets/data/data.csv")
       .call(bottomAxis);
 
     // create the scatter plot
-    chartGroup
+    var circlesGroup = chartGroup
       .selectAll("#scatter")
       .data(healthData)
       .enter()
@@ -75,7 +76,7 @@ d3.csv("./assets/data/data.csv")
       .attr("cy", function (d) {
         return yLinearScale(d.smokes);
       })
-      .attr("r", 10)
+      .attr("r", 15)
       .attr("stroke", "grey")
       .attr("stroke-width", "2")
       .style("fill", "lightblue");
@@ -103,17 +104,48 @@ d3.csv("./assets/data/data.csv")
       .text("Smokers");
 
     // add texts to circles
-    chartGroup
+    circlesGroup
       .append("text")
-      .attr("transform", function (d) {
-        return "translate(" + arc.centroid(d) + ")";
-      })
-      .attr("dy", ".35em")
-      .attr("text-anchor", "middle")
+      //We return the abbreviation to .text, which makes the text the abbreviation.
       .text(function (d) {
         return d.abbr;
+      })
+      //Now place the text using our scale.
+      .attr("dx", function (d) {
+        return xLinearScale(d["age"]);
+      })
+      .attr("dy", function (d) {
+        // When the size of the text is the radius,
+        // adding a third of the radius to the height
+        // pushes it into the middle of the circle.
+        return yLinearScale(d["smokes"]) + 10 / 2.5;
+      })
+      .attr("font-size", 15)
+      .attr("stroke", "grey")
+      .attr("class", "stateText");
+
+    // append a div to the body to create tooltips and assign it to a class
+    // var toolTip = d3.select("body").append("div").attr("class", "tooltip");
+
+    // add an onmouseover event to display the tooltip
+    circlesGroup
+      .on("mouseover", function (d, i) {
+        toolTip.style("display", "block");
+        toolTip
+          .html(
+            `<strong>${d.state}</strong> <hr> <h1> Age: ${d.age} </h1> <h1> Smokes: ${d.smokes} </h1>`
+          )
+          .style("left", d3.event.pageX + "px")
+          .style("top", d3.event.pageY + "px");
+      })
+      // Step 3: Add an onmouseout event to make the tooltip invisible
+      .on("mouseout", function () {
+        toolTip.style("display", "none");
       });
-  })
-  .catch(function (error) {
-    console.log(error);
   });
+}
+// When the browser loads, makeResponsive() is called.
+makeResponsive();
+
+// When the browser window is resized, responsify() is called.
+d3.select(window).on("resize", makeResponsive);
